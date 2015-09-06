@@ -19,7 +19,8 @@
 
 //正規化後の画像のサイズとフォントを指定すると返してくれる。
 void GetDataMat(int width, std::string font, std::vector<MatrixF> DatasArray){
-    std::string basePath("/Users/iguchiyusuke/cpp/CharacterRecognition/CharacterRecognition/testdata/"+std::to_string(width)+"/"+font+"/");
+    //basePathの??にはtestdataのあるディレクトリのパスを入れる
+    std::string basePath("??/testdata/"+std::to_string(width)+"/"+font+"/");
     std::vector<std::string> pathList(CLASSES,basePath);
     //各文字の正規化後の画像のデータは.txtで保存されている。
     char filenames[CLASSES][10] = {{"19968.txt"},{"21491.txt"},{"38632.txt"},{"20870.txt"},{"29579.txt"},{"38899.txt"},
