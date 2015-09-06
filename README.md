@@ -9,7 +9,8 @@
 * C++ 11?
 
 ##使い方
- 
+[testdata](https://github.com/uyu-kickstart/testdata "testdata")
+を任意のディレクトリに置いて、makeArray.hのbasePathの??となっているところにtestdataへのパスを書く
 
 ##現状
 ドロップアウトやモメンタム項やAdaGrad等未実装。  

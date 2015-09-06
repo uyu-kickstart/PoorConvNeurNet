@@ -3,4 +3,5 @@
 !*.xcworkspace/contents.xcworkspacedata
 .DS_Store
 testdata/
+makeArray.h
 memo
