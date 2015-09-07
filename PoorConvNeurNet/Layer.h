@@ -19,10 +19,12 @@ public:
     MatrixD U;
     MatrixD Z;
     MatrixD Delta;
+    MatrixD dW;
     ActivationFunction* func;
     double_t alpha;
+    double_t momentum;
     
-    Layer(int units, int belowUnits, ActivationFunction* function, double_t alpha = 0.1);
+    Layer(int units, int belowUnits, ActivationFunction* function, double_t alpha, double_t momentum = 0.5);
     virtual ~Layer(){}
     //参照を返す
     virtual MatrixD ForwardPropargation(MatrixD X) = 0;
@@ -33,8 +35,9 @@ public:
 class FullyConnectedLayer : public Layer{
 public:
     MatrixD b;
+    MatrixD db;
     
-    FullyConnectedLayer(int units, int belowUnits, ActivationFunction* function, double_t alpha = 0.1);
+    FullyConnectedLayer(int units, int belowUnits, ActivationFunction* function, double_t alpha, double_t momentum = 0.5);
     ~FullyConnectedLayer(){}
     
     MatrixD ForwardPropargation(MatrixD X)override;
@@ -46,13 +49,15 @@ class ConvolutionLayer : public Layer {
 public:
     MatrixD H;
     MatrixD b;
+    MatrixD db;
+    MatrixD dH;
     std::vector<MatrixD> T;
     
     static int UnitWidth(int filterWidth, int beforeWidth);
     void Initialize();
     void makeW();
     
-    ConvolutionLayer(int filterWidth, int beforeWidth, ActivationFunction* function, double_t alpha = 0.1);
+    ConvolutionLayer(int filterWidth, int beforeWidth, ActivationFunction* function, double_t alpha, double_t momentum = 0.5);
     ~ConvolutionLayer(){}
     
     MatrixD ForwardPropargation(MatrixD X)override;
@@ -67,7 +72,7 @@ public:
     
     static int UnitWidth(int beforeWidth, int stride);
     
-    PoolingLayer(int poolingWidth, int beforeWidth, ActivationFunction* function, int stride, double_t alpha = 0.1);
+    PoolingLayer(int poolingWidth, int beforeWidth, ActivationFunction* function, int stride, double_t alpha, double_t momentum = 0.5);
     ~PoolingLayer(){}
     
     MatrixD ForwardPropargation(MatrixD X)override;

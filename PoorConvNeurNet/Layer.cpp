@@ -8,19 +8,22 @@
 
 #include "Layer.h"
 
-Layer::Layer(int units, int belowUnits, ActivationFunction* function, double_t alpha) :
-    W(units,belowUnits), U(units,1), Z(units,1), Delta(units,1){
+Layer::Layer(int units, int belowUnits, ActivationFunction* function, double_t alpha, double_t momentum) :
+    W(units,belowUnits), U(units,1), Z(units,1), Delta(units,1), dW(units,belowUnits){
+        dW = 0;
     func = function;
     this->alpha = alpha;
+    this->momentum = momentum;
 }
 
-FullyConnectedLayer::FullyConnectedLayer(int units, int belowUnits, ActivationFunction* function, double_t learning_rate) :
-    Layer(units,belowUnits,function,learning_rate),
-    b(units,1){
+FullyConnectedLayer::FullyConnectedLayer(int units, int belowUnits, ActivationFunction* function, double_t learning_rate, double_t momentum) :
+    Layer(units,belowUnits,function,learning_rate, momentum),
+    b(units,1), db(units,1){
     alpha = learning_rate;
     cv::RNG gen(cv::getTickCount());
     gen.fill(W, cv::RNG::UNIFORM, cv::Scalar(-1.0), cv::Scalar(1.0));
     b = 0;
+    db = 0;
 }
 
 MatrixD FullyConnectedLayer::ForwardPropargation(MatrixD X){
@@ -34,20 +37,18 @@ MatrixD FullyConnectedLayer::ForwardPropargation(MatrixD X){
 MatrixD FullyConnectedLayer::BackPropargation(MatrixD Delta_Higher, MatrixD W_Higher, MatrixD Z_lower){
     func->df(Z, Delta);
     Delta = Delta.mul(W_Higher.t() * Delta_Higher);
-    MatrixD dW = Delta * Z_lower.t();
-    MatrixD db = Delta;
-    //モメンタム項なし
-    W -= alpha * dW;
-    b -= alpha * db;
+    dW = momentum * dW - alpha * Delta * Z_lower.t();
+    db = momentum * db - alpha * Delta;
+    W += dW;
+    b += db;
     return Delta;
 }
 MatrixD FullyConnectedLayer::BackPropargation_Last(MatrixD Teacher, MatrixD Z_lower,ErrorFunction* erFunc){
     erFunc->df(Teacher, Z, Delta);
-    MatrixD dW = Delta * Z_lower.t();
-    MatrixD db = Delta;
-    //モメンタム項なし
-    W -= alpha * dW;
-    b -= alpha * db;
+    dW = momentum * dW - alpha * Delta * Z_lower.t();
+    db = momentum * db - alpha * Delta;
+    W += dW;
+    b += db;
     return Delta;
 }
 
@@ -76,10 +77,10 @@ void ConvolutionLayer::makeW(){
     }
 }
 
-ConvolutionLayer::ConvolutionLayer(int filterWidth, int beforeWidth, ActivationFunction* function, double_t learning_rate) :
-    Layer((int)pow(UnitWidth(filterWidth, beforeWidth), 2), beforeWidth*beforeWidth, function, learning_rate),
+ConvolutionLayer::ConvolutionLayer(int filterWidth, int beforeWidth, ActivationFunction* function, double_t learning_rate, double_t momentum) :
+    Layer((int)pow(UnitWidth(filterWidth, beforeWidth), 2), beforeWidth*beforeWidth, function, learning_rate, momentum),
     H(filterWidth*filterWidth,1),
-    b((int)pow(UnitWidth(filterWidth, beforeWidth), 2), 1){
+    b((int)pow(UnitWidth(filterWidth, beforeWidth), 2), 1), db(b.rows, 1), dH(H.rows,1){
     alpha = learning_rate;
     for(int i = 0; i < H.rows; i++){
         T.push_back(MatrixD::zeros(W.rows, W.cols));
@@ -91,6 +92,8 @@ ConvolutionLayer::ConvolutionLayer(int filterWidth, int beforeWidth, ActivationF
             }
         }
     }
+    db = 0;
+    dH = 0;
     ConvolutionLayer::Initialize();
 }
 
@@ -104,45 +107,47 @@ MatrixD ConvolutionLayer::ForwardPropargation(MatrixD X){
 MatrixD ConvolutionLayer::BackPropargation(MatrixD Delta_Higher, MatrixD W_Higher, MatrixD Z_lower){
     func->df(Z, Delta);
     Delta = Delta.mul(W_Higher.t() * Delta_Higher);
-    MatrixD dW = Delta * Z_lower.t();
-    MatrixD db = Delta;
-    //モメンタム項なし
-    W -= alpha * dW;
-    b -= alpha * db;
+    dW = Delta * Z_lower.t();
+    db = momentum * db - alpha * Delta;
+    W += dW;
+    b += db;
     
     std::vector<MatrixD> dHr(H.rows);
-    MatrixD dH(H.rows,1);
+    MatrixD dH_(H.rows,1);
+    dH_ = 0;
     for(int r = 0; r < dHr.size(); r++){
         dHr.at(r) = T.at(r).mul(dW);
         reduce(dHr.at(r), dHr.at(r), 0, CV_REDUCE_SUM);
         reduce(dHr.at(r), dHr.at(r), 1, CV_REDUCE_SUM);
-        dH(r,0) = dHr.at(r)(0,0);
+        dH_(r,0) = dHr.at(r)(0,0);
     }
     //改善すべき点：AdaGrad等未実装
-    H -= dH * alpha;
+    dH = momentum * dH - alpha * dH_;
+    H += dH;
     makeW();
     return Delta;
 }
 
 MatrixD ConvolutionLayer::BackPropargation_Last(MatrixD Teacher, MatrixD Z_lower, ErrorFunction* erFunc){
     erFunc->df(Teacher, Z, Delta);
-    MatrixD dW = Delta * Z_lower.t();
-    MatrixD db = Delta;
-    //モメンタム項なし
-    W -= alpha * dW;
-    b -= alpha * db;
+    dW = Delta * Z_lower.t();
+    db = momentum * db - alpha * Delta;
+    W += dW;
+    b += db;
+    
     std::vector<MatrixD> dHr(H.rows);
-    MatrixD dH(H.rows,1);
+    MatrixD dH_(H.rows,1);
+    dH_ = 0;
     for(int r = 0; r < dHr.size(); r++){
         dHr.at(r) = T.at(r).mul(dW);
         reduce(dHr.at(r), dHr.at(r), 0, CV_REDUCE_SUM);
         reduce(dHr.at(r), dHr.at(r), 1, CV_REDUCE_SUM);
-        dH(r,0) = dHr.at(r)(0,0);
+        dH_(r,0) = dHr.at(r)(0,0);
     }
     //改善すべき点：AdaGrad等未実装
-    H -= dH * alpha;
+    dH = momentum * dH - alpha * dH_;
+    H += dH;
     makeW();
-
     return Delta;
 }
 
@@ -151,8 +156,8 @@ int PoolingLayer::UnitWidth(int beforeWidth, int stride){
     return (int)floor((beforeWidth - 1)/stride) + 1;
 }
 
-PoolingLayer::PoolingLayer(int poolingWidth, int beforeWidth, ActivationFunction* function, int stride, double_t learning_rate):
-    Layer((int)pow(UnitWidth(beforeWidth,stride), 2),beforeWidth*beforeWidth, function, learning_rate){
+PoolingLayer::PoolingLayer(int poolingWidth, int beforeWidth, ActivationFunction* function, int stride, double_t learning_rate, double_t momentum):
+    Layer((int)pow(UnitWidth(beforeWidth,stride), 2),beforeWidth*beforeWidth, function, learning_rate, momentum){
     PoolingLayer::poolingWidth = poolingWidth;
     PoolingLayer::stride = stride;
     int halfPoolingWidth = (int)floor(poolingWidth/2);
@@ -179,6 +184,7 @@ PoolingLayer::PoolingLayer(int poolingWidth, int beforeWidth, ActivationFunction
 MatrixD PoolingLayer::ForwardPropargation(MatrixD X){
     MatrixD X_ = X.reshape(1,1).t();
     //改善するべき点:用意した重み行列によるpoolingは精度が悪い
+    //正規化を行っていないので値が発散しやすい?
     U = W * X_;
     U.copyTo(Z);
     /*
