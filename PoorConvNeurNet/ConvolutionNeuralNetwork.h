@@ -20,7 +20,8 @@ public:
     std::vector<Layer*> network;
     ErrorFunction* errorFunc;
     MatrixF ZL;
-    ConvolutionalNeuralNetwork(std::vector<Layer*> network, std::vector<MatrixF> Teachers, std::vector<MatrixF> Inputs, ErrorFunction* errorFunction){
+    ConvolutionalNeuralNetwork(std::vector<Layer*> network, std::vector<MatrixF> Teachers, std::vector<MatrixF> Inputs, ErrorFunction* errorFunction):
+    ZL(Teachers.at(0).rows,Teachers.at(0).cols){
         this->Teachers = Teachers;
         this->Inputs = Inputs;
         this->network = network;

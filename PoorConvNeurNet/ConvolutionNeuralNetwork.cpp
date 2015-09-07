@@ -22,6 +22,7 @@ void ConvolutionalNeuralNetwork::FP(int index){
     for(int i = 0; i < network.size(); i++){
         (network.at(i)->ForwardPropargation(Z)).copyTo(Z);
     }
+    Z.copyTo(ZL);
 }
 
 void ConvolutionalNeuralNetwork::BP(int index){

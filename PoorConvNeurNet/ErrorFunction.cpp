@@ -9,8 +9,13 @@
 #include "ErrorFunction.h"
 
 float CrossEntropy_MultiClass::f(MatrixF Teacher, MatrixF ZL){
+    MatrixF logZL;
+    cv::log(ZL, logZL);
+    logZL = logZL.mul(Teacher);
+    cv::reduce(logZL, logZL, 0, CV_REDUCE_SUM);
+    cv::reduce(logZL, logZL, 1, CV_REDUCE_SUM);
     //未実装
-    return 1;
+    return -1 * logZL.at<float>(0,0);
 }
 
 void CrossEntropy_MultiClass::df(MatrixF Teacher, MatrixF ZL, MatrixF DeltaL){

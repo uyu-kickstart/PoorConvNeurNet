@@ -13,8 +13,8 @@
 
 #define INPUT_WIDTH 16
 #define LAYERS 4
-#define LEARNING_RATE 0.1
-#define LEARNING_REPEAT 10000
+#define LEARNING_RATE 0.9
+#define LEARNING_REPEAT 1
 #define TESTCLASSES 3
 
 int main(int argc, const char * argv[]) {
@@ -28,14 +28,14 @@ int main(int argc, const char * argv[]) {
         Teachers.at(n).at<float>(n,0) = 1;
     }
     GetDataMat(INPUT_WIDTH, "Hanazono", Inputs);
-    
+    /*
     std::vector<MatrixF> TestInputs(TESTCLASSES);
     std::vector<MatrixF> TestTeachers(TESTCLASSES);
     for (int n = 0; n < TESTCLASSES; ++n) {
         TestInputs.at(n) = Inputs.at(n);
         TestTeachers.at(n) = MatrixF::zeros(TESTCLASSES, 1);
         TestTeachers.at(n).at<float>(n,0) = 1;
-    }
+    }*/
     
     std::cout<<"Succeeded in Loading Datas"<<std::endl;
     
@@ -45,16 +45,16 @@ int main(int argc, const char * argv[]) {
     //PoolingLayer(int poolingWidth, int beforeWidth, ActivationFunction* function, int stride, float alpha = 0.1)
     //FullyConnectedLayer(int units, int belowUnits, ActivationFunction* function, float alpha = 0.1)
     std::vector<Layer*> network(LAYERS);
-    ConvolutionLayer convlayer(3, INPUT_WIDTH, Logistic::getInstance(), 0.1);
+    ConvolutionLayer convlayer(3, INPUT_WIDTH, Identity::getInstance(), 0.1);
     network.at(0) = &convlayer;
-    PoolingLayer poolinglayer(3, ConvolutionLayer::UnitWidth(3, INPUT_WIDTH) , Logistic::getInstance(), 1, 0.1);
+    PoolingLayer poolinglayer(3, ConvolutionLayer::UnitWidth(3, INPUT_WIDTH) , Identity::getInstance(), 1, 0.1);
     network.at(1) = &poolinglayer;
-    FullyConnectedLayer fullayer0(TESTCLASSES * 2 ,network.at(1)->U.rows,Logistic::getInstance(),0.1);
+    FullyConnectedLayer fullayer0(CLASSES + 120,network.at(1)->U.rows,Identity::getInstance(),0.1);
     network.at(2) = &fullayer0;
-    FullyConnectedLayer fullayer1(TESTCLASSES, network.at(2)->U.rows, Softmax::getInstance(),0.1);
+    FullyConnectedLayer fullayer1(CLASSES, network.at(2)->U.rows, Softmax::getInstance(),0.1);
     network.at(3) = &fullayer1;
     
-    ConvolutionalNeuralNetwork convNet(network, TestTeachers, TestInputs, CrossEntropy_MultiClass::getInstance());
+    ConvolutionalNeuralNetwork convNet(network, Teachers, Inputs, CrossEntropy_MultiClass::getInstance());
     
     std::cout<<"Succeeded in Building ConvNetwork "<<std::endl;
     std::cout<<"ConvNetwork Learning..."<<std::endl;
@@ -64,10 +64,14 @@ int main(int argc, const char * argv[]) {
     int64 time = cv::getTickCount();
     
     for(int i = 0; i < LEARNING_REPEAT; ++i){
-        for(int index = 0; index < TESTCLASSES; ++index){
+        float E = 0;
+        for(int index = 0; index < CLASSES; ++index){
             convNet.FP(index);
+            E += convNet.errorFunc->f(convNet.Teachers.at(index), convNet.ZL);
             convNet.BP(index);
         }
+        if(E < 0.01)
+            break;
     }
     
     std::cout<<"filter\n"<< convlayer.H.reshape(1,3) <<std::endl;
@@ -79,9 +83,8 @@ int main(int argc, const char * argv[]) {
     std::cout<<"Recognition Test"<<std::endl;
     
     float macthCount = 0;
-    for (int i = 0; i < TESTCLASSES; ++i) {
-        MatrixF OutPutMat = convNet.FP(TestInputs.at(i));
-        std::cout<<OutPutMat<<std::endl;
+    for (int i = 0; i < CLASSES; ++i) {
+        MatrixF OutPutMat = convNet.FP(Inputs.at(i));
         int index_max = -1;
         float maxVal = 0;
         for(int j = 0; j < OutPutMat.rows; ++j){
