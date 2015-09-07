@@ -14,8 +14,8 @@
 
 class ErrorFunction {
 public:
-    virtual float f(MatrixF Teacher, MatrixF ZL)=0;
-    virtual void df(MatrixF Teacher, MatrixF ZL, MatrixF DeltaL)=0;
+    virtual double_t f(MatrixD Teacher, MatrixD ZL)=0;
+    virtual void df(MatrixD Teacher, MatrixD ZL, MatrixD DeltaL)=0;
 };
 
 class CrossEntropy_MultiClass : public ErrorFunction {
@@ -28,8 +28,8 @@ public:
         static CrossEntropy_MultiClass ce_mc;
         return &ce_mc;
     }
-    float f(MatrixF Teacher, MatrixF ZL) override;
-    void df(MatrixF Teacher, MatrixF ZL, MatrixF DeltaL) override;
+    double_t f(MatrixD Teacher, MatrixD ZL) override;
+    void df(MatrixD Teacher, MatrixD ZL, MatrixD DeltaL) override;
 };
 
 class Likelihood_BinaryClass : public ErrorFunction {
@@ -42,8 +42,8 @@ public:
         static Likelihood_BinaryClass l_bc;
         return &l_bc;
     }
-    float f(MatrixF Teacher, MatrixF ZL) override;
-    void df(MatrixF Teacher, MatrixF ZL, MatrixF DeltaL) override;
+    double_t f(MatrixD Teacher, MatrixD ZL) override;
+    void df(MatrixD Teacher, MatrixD ZL, MatrixD DeltaL) override;
 };
 
 class SquareError : public ErrorFunction {
@@ -56,8 +56,8 @@ public:
         static SquareError se;
         return &se;
     }
-    float f(MatrixF Teacher, MatrixF ZL) override;
-    void df(MatrixF Teacher, MatrixF ZL, MatrixF DeltaL) override;
+    double_t f(MatrixD Teacher, MatrixD ZL) override;
+    void df(MatrixD Teacher, MatrixD ZL, MatrixD DeltaL) override;
 };
 
 

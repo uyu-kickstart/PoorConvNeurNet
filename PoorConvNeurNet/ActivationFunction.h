@@ -12,8 +12,8 @@
 #include "Definitions.h"
 class ActivationFunction {
 public:
-    virtual void f(MatrixF U, MatrixF Z) = 0;
-    virtual void df(MatrixF Z, MatrixF Out) = 0;
+    virtual void f(MatrixD U, MatrixD Z) = 0;
+    virtual void df(MatrixD Z, MatrixD Out) = 0;
 };
 
 class Identity : public ActivationFunction {
@@ -26,8 +26,8 @@ public:
         static Identity identity;
         return &identity;
     }
-    void f(MatrixF U, MatrixF Z) override;
-    void df(MatrixF Z, MatrixF Out) override;
+    void f(MatrixD U, MatrixD Z) override;
+    void df(MatrixD Z, MatrixD Out) override;
 };
 
 class Rectifer : public ActivationFunction{
@@ -40,8 +40,8 @@ public:
         static Rectifer rectifer;
         return &rectifer;
     }
-    void f(MatrixF U, MatrixF Z) override;
-    void df(MatrixF Z, MatrixF Out) override;
+    void f(MatrixD U, MatrixD Z) override;
+    void df(MatrixD Z, MatrixD Out) override;
 };
 
 class Logistic : public ActivationFunction {
@@ -54,8 +54,8 @@ public:
         static Logistic logistic;
         return &logistic;
     }
-    void f(MatrixF U, MatrixF Z) override;
-    void df(MatrixF Z, MatrixF Out) override;
+    void f(MatrixD U, MatrixD Z) override;
+    void df(MatrixD Z, MatrixD Out) override;
 };
 
 class Softmax : public ActivationFunction {
@@ -68,8 +68,8 @@ public:
         static Softmax softmax;
         return &softmax;
     }
-    void f(MatrixF U, MatrixF Z) override;
-    void df(MatrixF Z, MatrixF Out) override;
+    void f(MatrixD U, MatrixD Z) override;
+    void df(MatrixD Z, MatrixD Out) override;
 };
 
 #endif /* defined(__PoorConvNeurNet__ActivationFunction__) */

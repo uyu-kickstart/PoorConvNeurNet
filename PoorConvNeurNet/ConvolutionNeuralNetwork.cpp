@@ -8,8 +8,8 @@
 
 #include "ConvolutionNeuralNetwork.h"
 
-MatrixF ConvolutionalNeuralNetwork::FP(MatrixF X){
-    MatrixF Z;
+MatrixD ConvolutionalNeuralNetwork::FP(MatrixD X){
+    MatrixD Z;
     X.copyTo(Z);
     for(int i = 0; i < network.size(); i++){
         network.at(i)->ForwardPropargation(Z).copyTo(Z);
@@ -18,7 +18,7 @@ MatrixF ConvolutionalNeuralNetwork::FP(MatrixF X){
 }
 
 void ConvolutionalNeuralNetwork::FP(int index){
-    MatrixF Z = Inputs.at(index).reshape(1,1).t();
+    MatrixD Z = Inputs.at(index).reshape(1,1).t();
     for(int i = 0; i < network.size(); i++){
         (network.at(i)->ForwardPropargation(Z)).copyTo(Z);
     }
@@ -26,7 +26,7 @@ void ConvolutionalNeuralNetwork::FP(int index){
 }
 
 void ConvolutionalNeuralNetwork::BP(int index){
-    MatrixF Delta;
+    MatrixD Delta;
     network.at((int)network.size()-1)->BackPropargation_Last(Teachers.at(index), network.at((int)network.size()-2)->Z, errorFunc).copyTo(Delta);
     for(int i = (int)network.size() - 2; i > 0; i--){
         network.at(i)->BackPropargation(Delta, network.at(i+1)->W,network.at(i-1)->Z).copyTo(Delta);

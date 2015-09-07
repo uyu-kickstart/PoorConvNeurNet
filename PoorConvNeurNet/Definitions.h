@@ -12,6 +12,6 @@
 #include <opencv2/opencv.hpp>
 #include <math.h>
 
-typedef cv::Mat_<float> MatrixF;
+typedef cv::Mat_<double_t> MatrixD;
 
 #endif

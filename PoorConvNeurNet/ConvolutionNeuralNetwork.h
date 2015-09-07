@@ -15,19 +15,19 @@
 
 class ConvolutionalNeuralNetwork {
 public:
-    std::vector<MatrixF> Teachers;
-    std::vector<MatrixF> Inputs;
+    std::vector<MatrixD> Teachers;
+    std::vector<MatrixD> Inputs;
     std::vector<Layer*> network;
     ErrorFunction* errorFunc;
-    MatrixF ZL;
-    ConvolutionalNeuralNetwork(std::vector<Layer*> network, std::vector<MatrixF> Teachers, std::vector<MatrixF> Inputs, ErrorFunction* errorFunction):
+    MatrixD ZL;
+    ConvolutionalNeuralNetwork(std::vector<Layer*> network, std::vector<MatrixD> Teachers, std::vector<MatrixD> Inputs, ErrorFunction* errorFunction):
     ZL(Teachers.at(0).rows,Teachers.at(0).cols){
         this->Teachers = Teachers;
         this->Inputs = Inputs;
         this->network = network;
         this->errorFunc = errorFunction;
     }
-    MatrixF FP(MatrixF X);
+    MatrixD FP(MatrixD X);
     void FP(int index);
     void BP(int index);
 };
